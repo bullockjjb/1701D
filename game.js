@@ -15,7 +15,7 @@ class Enterprise {
         this.x = canvas.width / 2;
         this.y = canvas.height / 2;
         this.speed = 2;
-        this.saucer = { x: this.x, y: this.y - 20, r: 20 };
+        this.saucer = { x: this.x, y: this.y - 30, r: 30 };
         this.drive = { x: this.x, y: this.y + 30, w: 40, h: 60 };
         this.separated = false;
     }
@@ -24,7 +24,7 @@ class Enterprise {
         this.x = canvas.width / 2;
         this.y = canvas.height / 2;
         this.saucer.x = this.x;
-        this.saucer.y = this.y - 20;
+        this.saucer.y = this.y - 30;
         this.drive.x = this.x;
         this.drive.y = this.y + 30;
         this.separated = false;
@@ -44,6 +44,11 @@ class Enterprise {
         this.saucer.y += dy;
     }
 
+    moveDrive(dx, dy) {
+        this.drive.x += dx;
+        this.drive.y += dy;
+    }
+
     draw() {
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 2;
@@ -54,6 +59,9 @@ class Enterprise {
             ctx.beginPath();
             ctx.arc(this.saucer.x, this.saucer.y, this.saucer.r, 0, Math.PI * 2);
             ctx.rect(this.drive.x - this.drive.w / 2, this.drive.y - this.drive.h / 2, this.drive.w, this.drive.h);
+            // nacelles
+            ctx.rect(this.drive.x - this.drive.w / 2 - 12, this.drive.y + this.drive.h / 4, 10, this.drive.h / 2);
+            ctx.rect(this.drive.x + this.drive.w / 2 + 2, this.drive.y + this.drive.h / 4, 10, this.drive.h / 2);
             ctx.stroke();
         } else {
             // draw saucer
@@ -63,6 +71,8 @@ class Enterprise {
             // draw drive
             ctx.beginPath();
             ctx.rect(this.drive.x - this.drive.w / 2, this.drive.y - this.drive.h / 2, this.drive.w, this.drive.h);
+            ctx.rect(this.drive.x - this.drive.w / 2 - 12, this.drive.y + this.drive.h / 4, 10, this.drive.h / 2);
+            ctx.rect(this.drive.x + this.drive.w / 2 + 2, this.drive.y + this.drive.h / 4, 10, this.drive.h / 2);
             ctx.stroke();
         }
     }
@@ -94,9 +104,11 @@ window.addEventListener('keydown', e => {
         } else if (enterprise.canDock()) {
             enterprise.separated = false;
             gameState = STATE.FLYING;
-            // align positions
+            // align positions to drive location
+            enterprise.x = enterprise.drive.x;
+            enterprise.y = enterprise.drive.y - 30;
             enterprise.saucer.x = enterprise.x;
-            enterprise.saucer.y = enterprise.y - 20;
+            enterprise.saucer.y = enterprise.y - 30;
         }
     }
 });
@@ -114,12 +126,19 @@ function update() {
         enterprise.move(dx, dy);
     }
     if (gameState === STATE.SEPARATED) {
-        let dx = 0, dy = 0;
-        if (keys['w'] || keys['W']) dy -= enterprise.speed;
-        if (keys['s'] || keys['S']) dy += enterprise.speed;
-        if (keys['a'] || keys['A']) dx -= enterprise.speed;
-        if (keys['d'] || keys['D']) dx += enterprise.speed;
-        enterprise.moveSaucer(dx, dy);
+        let dxSaucer = 0, dySaucer = 0;
+        if (keys['w'] || keys['W']) dySaucer -= enterprise.speed;
+        if (keys['s'] || keys['S']) dySaucer += enterprise.speed;
+        if (keys['a'] || keys['A']) dxSaucer -= enterprise.speed;
+        if (keys['d'] || keys['D']) dxSaucer += enterprise.speed;
+        enterprise.moveSaucer(dxSaucer, dySaucer);
+
+        let dxDrive = 0, dyDrive = 0;
+        if (keys['ArrowLeft']) dxDrive -= enterprise.speed;
+        if (keys['ArrowRight']) dxDrive += enterprise.speed;
+        if (keys['ArrowUp']) dyDrive -= enterprise.speed;
+        if (keys['ArrowDown']) dyDrive += enterprise.speed;
+        enterprise.moveDrive(dxDrive, dyDrive);
     }
 }
 
@@ -175,6 +194,11 @@ function loop() {
             ctx.textAlign = 'center';
             ctx.fillText('Docked Mode', canvas.width/2, 20);
         }
+        // tribute text bottom-left
+        ctx.fillStyle = 'white';
+        ctx.font = '14px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('Made for Dwayne, Boldly Go Brother', 10, canvas.height - 10);
     }
     requestAnimationFrame(loop);
 }
